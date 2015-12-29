@@ -1,8 +1,10 @@
-  'use strict';
+'use strict';
 const React = require('react-native');
 const SERVER_ENDPOINT = require('../Auth/endpoints.js').serverEndpoint;
 const STYLES = require('../Assets/PicoStyles.js');
-
+const Separator = require('./Separator.js');
+const SideScroller = require('./SideScroller.js');
+const UI_HELPERS = require('../Utils/UiHelpers.js');
 
 const {
   AlertIOS,
@@ -13,73 +15,6 @@ const {
   StyleSheet,
   TouchableHighlight
 } = React;
-
-class PlaylistName extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      selected: false
-    };
-  }
-  handlePress() {
-    this.setState({
-      selected: true
-    });
-    this.props.updateParentState(this.props.name);
-    // render this playlist
-  }
-  render() {
-    return (
-      <TouchableHighlight onPress={this.handlePress.bind(this)} >
-        <View>
-          <Text style={styles.playlistName}> {this.props.name}</Text>
-        </View>
-      </TouchableHighlight>
-    )
-  }
-}
-
-class ScrollLists extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      nowViewing: this.props.initialPlaylist
-    };
-  }
-  updateNowViewing(playlistName) {
-    this.setState({
-      nowViewing: playlistName
-    });
-    this.props.updateParentState(playlistName);
-  }
-  render() {
-    let playlistNames = this.props.playlistNames.map((name, index) => {
-      return (
-        <View>
-          <PlaylistName
-            key={index}
-            name={name}
-            updateParentState={this.updateNowViewing.bind(this)} />
-        </View>
-      );
-    });
-    return (
-      <View style={styles.scrollListsContainer}>
-        {/*<Text style={styles.currentPlaylist}>Current Playlist: {this.state.nowViewing}</Text>*/}
-        {/*<View style={styles.scrollContainer}>*/}
-          <ScrollView
-            horizontal={true}
-            informParent={this.updateNowViewing.bind(this)}
-            contentContainerStyle={styles.playlists}
-            >
-            {playlistNames}
-          </ScrollView>
-        {/*</View>*/}
-      </View>
-    );
-  }
-}
-
 
 class Single extends React.Component {
   constructor(props) {
@@ -103,21 +38,6 @@ class Single extends React.Component {
     }
     return <View />;
   }
-  handlePress() {
-    this.togglePlaying();
-    let data = {trackId: this.props.id};
-    fetch(`${SERVER_ENDPOINT}/playsong`, {
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      },
-      method: 'POST',
-      body: JSON.stringify(data)
-    })
-      .then(res => res.text())
-      .then(text => true)
-      .catch(err => AlertIOS.alert('Error!', 'Tracks in PlaylistViewer.js... oops'));
-  }
   handleDelete() {
     fetch(`${SERVER_ENDPOINT}/Playlists/${this.props.playlistName}/${this.props.id}`, {
       headers:{
@@ -126,7 +46,6 @@ class Single extends React.Component {
       },
       method: 'DELETE'
     });
-
         this.props.updateParentState(this.props.playlistName);
         AlertIOS.alert('FINISHED DELETING from ', this.props.playlistName);
       // .then(res => res.json())
@@ -137,43 +56,23 @@ class Single extends React.Component {
       // AlertIOS.alert("this is after deleted");
       // this.props.updatePlaylistState(playlistname);
   }
-  makeHumanReadable(ms) {
-    let minutesRaw = ms/1000/60;
-    let minutesPure = Math.floor(minutesRaw);
-    let secondsRaw = minutesRaw % minutesPure * 60;
-    let secondsPure = '0' + secondsRaw.toFixed(0);
-    var endOfString = secondsPure.length - 1;
-    secondsPure = secondsPure.charAt(endOfString) + secondsPure.charAt(endOfString - 1);
-    return `${minutesPure}:${secondsPure}`;
-  }
   render() {
     let artwork = this.props.artwork_url ? {uri:this.props.artwork_url} : require("../Assets/Pico-O-grey.png");
     return (
-      <TouchableHighlight
-        onPress={this.handlePress.bind(this)}>
+      <TouchableHighlight>
         <View style={styles.singleContainer}>
           {this.renderPlayingStatus()}
           <Image source={artwork} style={styles.image} />
           <View style={styles.infoContainer}>
             <Text style={styles.title}>{this.props.title}</Text>
             <Text style={styles.info}>{this.props.user.username}</Text>
-            <Text style={styles.info}>{this.makeHumanReadable(this.props.duration)}</Text>
+            <Text style={styles.info}>{UI_HELPERS.makeHumanReadable(this.props.duration)}</Text>
           </View>
           <View style={styles.deleteContainer}>
             <Text onPress={this.handleDelete.bind(this)}>Delete</Text>
           </View>
         </View>
       </TouchableHighlight>
-    );
-  }
-}
-
-class Separator extends React.Component {
-  render() {
-    return (
-      <View style={styles.separatorContainer}>
-        <View style={styles.separator} />
-      </View>
     );
   }
 }
@@ -237,7 +136,6 @@ class PlaylistViewer extends React.Component{
   updateResults(updatedPlaylist) {
     this.props.results = updatedPlaylist;
   }
-
   render() {
     // find nowViewing playlist data
     var nowViewingList = this.props.results.filter(playlistObj => {
@@ -248,14 +146,17 @@ class PlaylistViewer extends React.Component{
     });
     return (
       <View style={styles.playlistViewer}>
-      <Text style={styles.currentPlaylist}>Current Playlist: {this.state.nowViewing}</Text>
-        <ScrollLists updateParentState={this.updateNowViewing.bind(this)} playlistNames={playlistNames} initialPlaylist={this.props.initialPlaylist}/>
+        <Text style={styles.currentPlaylist}>Current Playlist: {this.state.nowViewing}</Text>
+        <SideScroller
+          updateParentState={this.updateNowViewing.bind(this)} 
+          playlistNames={playlistNames} 
+          initialPlaylist={this.props.initialPlaylist}/>
         <Tracks 
           updateParentState={this.updateResults.bind(this)} 
           data={nowViewingList} 
           updatePlaylistViewerState={this.updateNowViewing.bind(this)}/>
       </View>
-    )
+    );
   }
 }
 
