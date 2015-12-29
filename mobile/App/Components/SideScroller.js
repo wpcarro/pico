@@ -1,3 +1,14 @@
+'use strict';
+const React = require('react-native');
+
+const {
+  View,
+  Text,
+  TouchableHighlight,
+  ScrollView,
+  StyleSheet
+} = React;
+
 class PlaylistName extends React.Component {
   constructor(props) {
     super(props);
@@ -10,7 +21,6 @@ class PlaylistName extends React.Component {
       selected: true
     });
     this.props.updateParentState(this.props.name);
-    // render this playlist
   }
   render() {
     return (
@@ -19,7 +29,7 @@ class PlaylistName extends React.Component {
           <Text style={styles.playlistName}> {this.props.name}</Text>
         </View>
       </TouchableHighlight>
-    )
+    );
   }
 }
 
@@ -53,8 +63,7 @@ class SideScroller extends React.Component {
           <ScrollView
             horizontal={true}
             informParent={this.updateNowViewing.bind(this)}
-            contentContainerStyle={styles.playlists}
-            >
+            contentContainerStyle={styles.playlists}>
             {playlistNames}
           </ScrollView>
         {/*</View>*/}
@@ -62,5 +71,27 @@ class SideScroller extends React.Component {
     );
   }
 }
+
+const styles = StyleSheetList.create({
+  playlists:{
+    flex: 1,
+    backgroundColor: 'red'
+  },
+  playlistName: {
+    marginLeft: 5,
+    fontWeight: 'bold',
+    color: 'white',
+    backgroundColor: 'blue',
+    borderRadius: 5
+  },
+  scrollContainer: {
+    height: 30,
+    padding: 0
+  },
+  scrollListsContainer: {
+    flexDirection: 'column',
+    backgroundColor: 'white'
+  },
+});
 
 module.exports = SideScroller;

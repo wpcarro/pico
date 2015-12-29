@@ -186,27 +186,6 @@ const styles = StyleSheet.create({
     color: 'black',
     backgroundColor: '#ffa700'
   },
-  playlistName: {
-    marginLeft: 5,
-    fontWeight: 'bold',
-    color: 'white',
-    backgroundColor: 'blue',
-    borderRadius: 5
-  },
-  scrollListsContainer: {
-
-    flexDirection: 'column',
-    backgroundColor: 'white'
-  },
-  playlists:{
-    flex: 1,
-    backgroundColor: 'red'
-  },
-  scrollContainer: {
-
-    height: 30,
-    padding: 0
-  },
   tracksContainer: {
     flex: 1,
     paddingTop: 10,
