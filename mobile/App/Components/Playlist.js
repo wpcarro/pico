@@ -39,14 +39,14 @@ class Playlist extends React.Component {
       .then(res => res.json())
       .then(json => {
         AlertIOS.alert('json', String(JSON.stringify(json, null, 2)));
-        // this.props.navigator.push({
-        //   title: 'Playlists',
-        //   passProps: {
-        //     results: json,
-        //     initialPlaylist: playlistname
-        //   },
-        //   component: PlaylistViewer
-        // });
+        this.props.navigator.push({
+          title: 'Playlists',
+          passProps: {
+            results: json,
+            initialPlaylist: playlistname
+          },
+          component: PlaylistViewer
+        });
         this.props.updateParentState();
       })
       .catch(err => {

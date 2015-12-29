@@ -22,7 +22,6 @@ class Single extends React.Component {
     this.state = {
       isLoading: false,
       isPlaying: false,
-
     };
   }
   togglePlaying() {
@@ -99,7 +98,7 @@ class Tracks extends React.Component {
         <View>
           <Single
             key={index}
-            {...trackObj}
+            {...trackObj.soundcloud}
             playlistName={playlistName}
             updateParentState={this.updatePlaylistViewerState.bind(this)}
             informParent={this.updatenowPlaying.bind(this)} />

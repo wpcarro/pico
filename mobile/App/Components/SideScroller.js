@@ -72,7 +72,7 @@ class SideScroller extends React.Component {
   }
 }
 
-const styles = StyleSheetList.create({
+const styles = StyleSheet.create({
   playlists:{
     flex: 1,
     backgroundColor: 'red'
