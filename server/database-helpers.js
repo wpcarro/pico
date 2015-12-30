@@ -87,7 +87,7 @@ const addToPlaylist = (req, res, next) => {
 };
 
 const addToPartyPlaylist = (req, res, next) => {
-	console.log(`Adding "${req.body.trackObj.title}" to the Party Playlist...`);
+	console.log(`req.body.trackObj: ${JSON.stringify(req.body.trackObj, null, 2)}`);
 	var trackObj = Object.assign({rating: 0}, {soundcloud: req.body.trackObj});
 	PartyPlaylistRef
 		.child(trackObj.soundcloud.id)
@@ -123,25 +123,17 @@ const deleteSongFromPlaylist = (req, res, next) => {
 		.child(playlistname)
 		.orderByValue()
 		.on('child_added', snapshot => {
-			// console.log('inside of here!');
-			// console.log(`snapshot.key(): ${snapshot.key()}`);
 			if (snapshot.key() == trackID) {
-				console.log('MATCHED!');
 				snapshot.ref().set(null, err => {
 					if (err) {
 						res.err = err;
 						return next();
 					}
-					console.log(trackID, ' removed from ', playlistname);
-					res.data = playlistname;
-					console.log('res.data is ', res.data);
-					return next();
+					console.log(`removed ${trackID} from "${playlistname}"`);
+					return getTracksFromPlaylist(req, res, next);
 				});
 			}
 		});
-		// no match found
-		res.err = 'No match found!';
-		return next();
 };
 
 const getPlaylists = (req, res, next) => {
@@ -159,7 +151,7 @@ const getPlaylists = (req, res, next) => {
 				exportArr.push(obj);
 			});
 			res.data = exportArr;
-			console.log("insdie get playlists dbhelper");
+			console.log("inside get playlists dbhelper");
 			next();
 		});
 };
@@ -172,6 +164,9 @@ const getPartyPlaylist = (req, res, next) => {
 			dataSnapshot.forEach(snapshot => {
 				exportArr.push(snapshot.exportVal());
 			});
+			exportArr.sort((a, b) => {
+				return b.rating - a.rating;
+			});
 			res.data = exportArr;
 			next();
 		});
@@ -181,9 +176,19 @@ const getTracksFromPlaylist = (req, res, next) => {
 	var playlistname = req.params.playlistname;
 	PlaylistsRef
 		.child(playlistname)
-		.once('value', snapshot => {
-			res.data = snapshot.val();
-			next();
+		.once('value', dataSnapshot => {
+			var exportArr = [];
+			dataSnapshot.forEach(snapshot => {
+				var obj = {};
+				var playlist = [];
+				for (var key in snapshot.exportVal()) {
+					playlist.push(snapshot.exportVal()[key]);
+				}
+				obj[snapshot.key()] = playlist;
+				exportArr.push(obj);
+			});
+			res.data = exportArr;
+			return next();
 		});
 };
 
@@ -191,12 +196,39 @@ const upvoteTrack = (req, res, next) => {
 	var trackID = req.params.trackID;
 	PartyPlaylistRef
 		.orderByValue()
-		.on('value', snapshot => {
+		.on('child_added', snapshot => {
 			if(snapshot.key() == trackID) {
-				snapshot.ref()
+				var val = snapshot.child('rating').val();
+				var newVal = val + 1;
+				var onComplete = err => {
+					if(err) {
+						res.err = err;
+						next();
+					}
+					getPartyPlaylist(req, res, next);
+				}
+				snapshot.ref().update({rating: newVal}, onComplete);
 			}
 		});
-
+}
+const downvoteTrack = (req, res, next) => {
+	var trackID = req.params.trackID;
+	PartyPlaylistRef
+		.orderByValue()
+		.on('child_added', snapshot => {
+			if(snapshot.key() == trackID) {
+				var val = snapshot.child('rating').val();
+				var newVal = val - 1;
+				var onComplete = err => {
+					if(err) {
+						res.err = err;
+						next();
+					}
+					getPartyPlaylist(req, res, next);
+				}
+				snapshot.ref().update({rating: newVal}, onComplete);
+			}
+		});
 }
 
 const API = {
@@ -210,7 +242,9 @@ const API = {
 	deleteSongFromPlaylist,
 	getPlaylists,
 	getPartyPlaylist,
-	getTracksFromPlaylist
+	getTracksFromPlaylist,
+	upvoteTrack,
+	downvoteTrack
 };
 
 module.exports = API;
